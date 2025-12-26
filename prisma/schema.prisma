@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CHURCH_ADMIN
+  SUPER_ADMIN
+  MEMBER
+}
+
+enum Plan {
+  PRO
+  ENTERPRISE
+  BASIC
+  FREE
+}
+
+enum UserType {
+  OAUTH
+  PASSWORD
+}
+
+model User {
+  id                  String                @id @default(uuid())
+  email               String                @unique
+  password            String
+  role                Role
+  userType            UserType
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  deviceTokens        DeviceToken[]
+  churches            Churches[]
+  churchAdminAccounts ChurchAdminAccounts[]
+}
+
+
+//Church Tebles 
+model Churches {
+  churchId            String                @id @default(uuid())
+  churchName          String
+  address             String
+  status              String
+  memberCapacity      Int
+  denomination        String
+  plan                Plan
+  contactEmail        String
+  contactPhone        String
+  joinedAt            DateTime              @default(now())
+  createdAt           DateTime              @default(now())
+  creatorId           String
+  creator             User                  @relation(fields: [creatorId], references: [id])
+  updatedAt           DateTime              @updatedAt
+  branding            ChurchBranding[]
+  churchAdminAccounts ChurchAdminAccounts[]
+  billingDetails      BillingDetails?
+}
+
+model ChurchBranding {
+  id             String   @id @default(uuid())
+  churchId       String
+  logoUrl        String?
+  primaryColor   String?
+  secondaryColor String?
+  colorPresets   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+
+  @@unique([churchId])
+}
+
+enum ChurchAdminType {
+  PRIMARY
+  SECONDARY
+}
+
+model ChurchAdminAccounts {
+  id              String          @id @default(uuid())
+  churchId        String
+  adminId         String
+  churchAdminType ChurchAdminType
+  assignedAt      DateTime        @default(now())
+  assignedBy      String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+  admin  User     @relation(fields: [adminId], references: [id])
+
+  @@unique([churchId, adminId])
+}
+
+model BillingDetails {
+  id             String   @id @default(uuid())
+  churchId       String   @unique
+  cardHolderName String
+  cardLast4      String
+  cardBrand      String
+  expMonth       Int
+  expYear        Int
+  billingAddress String
+  plan           Plan
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+}
+
+
+
+enum Platform {
+  IOS
+  ANDROID
+  WEB
+}
+//User Auth Tables 
+model DeviceToken {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique
+  platform   Platform
+  deviceName String?
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Otp {
+  id        Int       @id @default(autoincrement())
+  otpCode   String
+  email     String
+  used      Boolean   @default(false)
+  expiresAt DateTime
+  createdAt DateTime? @default(now())
+}
