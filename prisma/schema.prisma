@@ -27,19 +27,23 @@ enum UserType {
 
 model User {
   id                  String                @id @default(uuid())
-  name            String
+  name                String
   email               String                @unique
   password            String
-  role                Role                   @default(CHURCH_ADMIN)
-  userType            UserType               
-  numberOfLogins     Int                   @default(0)
+  role                Role                  @default(CHURCH_ADMIN)
+  userType            UserType
+  numberOfLogins      Int                   @default(0)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   deviceTokens        DeviceToken[]
   churches            Churches[]
   churchAdminAccounts ChurchAdminAccounts[]
-}
+  membershipProfiles  MembershipProfile[]
+  storeItems          StoreItem[]
+  orders              orders[]
 
+  transactions Transactions[]
+}
 
 //Church Tebles 
 model Churches {
@@ -60,6 +64,12 @@ model Churches {
   branding            ChurchBranding[]
   churchAdminAccounts ChurchAdminAccounts[]
   billingDetails      BillingDetails?
+  members             MembershipProfile[]
+  events              Events[]
+  storeItems          StoreItem[]
+  orders              orders[]
+
+  transactions Transactions[]
 }
 
 model ChurchBranding {
@@ -114,13 +124,12 @@ model BillingDetails {
   church Churches @relation(fields: [churchId], references: [churchId])
 }
 
-
-
 enum Platform {
   IOS
   ANDROID
   WEB
 }
+
 //User Auth Tables 
 model DeviceToken {
   id         String   @id @default(uuid())
@@ -144,4 +153,202 @@ model Otp {
   used      Boolean   @default(false)
   expiresAt DateTime
   createdAt DateTime? @default(now())
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum RelationshipStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+//member management tables
+model MembershipProfile {
+  id                 String             @id @default(uuid())
+  churchId           String
+  firstName          String
+  lastName           String
+  email              String             @unique
+  phoneNumber        String?
+  address            String?
+  relationshipStatus RelationshipStatus
+  status             MembershipStatus   @default(PENDING)
+  spouseName         String?
+  childrenNames      String[]
+  dateOfBirth        DateTime?
+  addedBy            String
+  joinedAt           DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  church   Churches         @relation(fields: [churchId], references: [churchId])
+  user     User             @relation(fields: [addedBy], references: [id])
+  children ChildtoMember[]
+  spouses  MembertoSpouse[]
+
+  @@index([churchId])
+}
+
+model ChildtoMember {
+  id        String   @id @default(uuid())
+  memberId  String
+  childName String
+  createdAt DateTime @default(now())
+
+  member MembershipProfile @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+}
+
+model MembertoSpouse {
+  id         String            @id @default(uuid())
+  memberId   String
+  spouseName String
+  marriedAt  DateTime
+  createdAt  DateTime          @default(now())
+  member     MembershipProfile @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+}
+
+//Events Tables
+enum EventStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum category {
+  WORSHIP
+  YOUTH
+  CONFERENCE
+  SEMINAR
+  OUTREACH
+  OTHER
+}
+
+model Events {
+  id          String      @id @default(uuid())
+  flyerUrl    String?
+  churchId    String
+  title       String
+  description String?
+  eventDate   DateTime
+  location    String?
+  capacity    Int?
+  ticketPrice Float?
+  category    category    @default(OTHER)
+  startTime   DateTime
+  endTime     DateTime
+  status      EventStatus @default(SCHEDULED)
+  qrCodeUrl   String?
+  createdBy   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+
+  @@index([churchId])
+}
+
+//store tables
+enum ItemCategory {
+  BOOKS
+  APPAREL
+  ACCESSORIES
+  MEDIA
+}
+enum itemStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+}
+model StoreItem {
+  id          String   @id @default(uuid())
+  churchId    String
+  productName        String
+  description String?
+  price       Float
+  stock       Int
+  category   String?
+  imageUrl    String?
+  status      itemStatus @default(AVAILABLE)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+  user   User     @relation(fields: [createdBy], references: [id])
+  orders orders[]
+
+  @@index([churchId])
+}
+
+model orders{
+  id          String   @id @default(uuid())
+  churchId    String
+  itemId      String
+  quantity    Int
+  totalPrice  Float
+  orderedBy   String
+  orderDate   DateTime @default(now())
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+  storeItem StoreItem @relation(fields: [itemId], references: [id])
+  user   User     @relation(fields: [orderedBy], references: [id])
+
+  @@index([churchId])
+
+}
+
+
+//Finance Tables
+enum TransactionType {
+  OFFERTORY
+  DONATION
+  TITHES
+  EXPENSES
+  OTHER
+}
+enum PaymentMethod {
+  CASH
+  CHECK
+  BANKTRANSFER
+  ONLINEPAYMENT
+  CARD
+}
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+model Transactions{
+  id          String   @id @default(uuid())
+  churchId    String
+  amount      Float
+  transactionType TransactionType @default(OTHER)
+  category   String?
+  description String?
+  date       DateTime
+  donorName  String?
+  paymentMethod PaymentMethod @default(CASH)
+  transactionDate DateTime @default(now())
+  paymentStatus PaymentStatus @default(PENDING)
+  addedBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+  user   User     @relation(fields: [addedBy], references: [id])
+
+  @@index([churchId])
+
 }
