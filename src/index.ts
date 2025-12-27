@@ -8,6 +8,7 @@ import "./Controllers/oauth-user.controller";
 import authRoutes from "./Routes/auth.routes";
 import churchRoutes from "./Routes/church.routes";
 import storeRoutes from "./Routes/store.route";
+import financeRoutes from "./Routes/finance.routes";
 import morgan from "morgan";
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -71,6 +72,10 @@ app.use("/church", churchRoutes);
 
 //store routes
 app.use("/store", storeRoutes);
+
+
+//finance routes
+app.use("/finance", financeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

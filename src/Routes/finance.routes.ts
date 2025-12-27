@@ -9,8 +9,8 @@ import {
 const router = express.Router();
 
 // Finance transaction routes
-router.post("/church/:churchId/transactions", protectedRoute, addTransaction);
-router.get("/church/:churchId/transactions", getAllTransactions);
+router.post("/:churchId/transactions", protectedRoute, addTransaction);
+router.get("/:churchId/transactions", getAllTransactions);
 router.get("/transactions/:transactionId", getSingleTransaction);
 
 export default router;
