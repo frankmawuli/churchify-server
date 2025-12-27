@@ -91,6 +91,12 @@ export const loginUser = async (req: Request, res: Response) => {
       data: { numberOfLogins: { increment: 1 } },
     });
 
+    //churchId to be added later
+    const churchId =  await prisma.churches.findFirst({
+      where: { creatorId: user.id },
+      select: { churchId: true },
+    });
+
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -98,6 +104,7 @@ export const loginUser = async (req: Request, res: Response) => {
         email: user.email,
         name: user.role,
         numberOfLogins: user.numberOfLogins,
+        churchId: churchId?.churchId,
         // Add other non-sensitive fields as needed
       },
       accessToken: accessToken,
