@@ -135,4 +135,3 @@ export const getSingleStoreProduct = async (req: Request, res: Response) => {
   }
 };
 
-//ordering products

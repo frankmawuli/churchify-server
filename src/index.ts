@@ -7,6 +7,7 @@ import passport from "passport";
 import "./Controllers/oauth-user.controller";
 import authRoutes from "./Routes/auth.routes";
 import churchRoutes from "./Routes/church.routes";
+import storeRoutes from "./Routes/store.route";
 import morgan from "morgan";
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -62,8 +63,14 @@ app.get("/profile", (req, res) => {
 //auth routes
 app.use("/auth", authRoutes);
 
+
+
 //church routes
 app.use("/church", churchRoutes);
+
+
+//store routes
+app.use("/store", storeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
