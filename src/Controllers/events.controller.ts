@@ -4,7 +4,7 @@ import prisma from "../Libs/prisma";
 // Create a new event
 export const createEvent = async (req: Request, res: Response) => {
   const adminId = (req.user as any)?.id;
-  const churchId = req.params.memberId;
+  const churchId = req.params.churchId;
   const {
     flyerUrl,
     title,
@@ -132,7 +132,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
 
 // Get all events for a specific church
 export const getAllEventsForChurch = async (req: Request, res: Response) => {
-  const churchId = req.params.memberId;
+  const churchId = req.params.churchId;
 
   try {
     if (!churchId) {
