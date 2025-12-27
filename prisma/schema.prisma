@@ -27,10 +27,12 @@ enum UserType {
 
 model User {
   id                  String                @id @default(uuid())
+  name            String
   email               String                @unique
   password            String
-  role                Role
-  userType            UserType
+  role                Role                   @default(CHURCH_ADMIN)
+  userType            UserType               
+  numberOfLogins     Int                   @default(0)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   deviceTokens        DeviceToken[]

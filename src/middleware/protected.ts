@@ -1,43 +1,49 @@
-import jwt from "jsonwebtoken";
-import {Response, Request, NextFunction} from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
+import prisma from "../Libs/prisma";
 
 const JWT_SECRET = process.env.JWT_ACCESS_SECRET;
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined in environment variables");
+  throw new Error("JWT_ACCESS_SECRET is not defined");
 }
 
-// ✅ Make this function async because we’re using an async DB query
-export default async function protectedRoute(req: Request, res: Response, next: NextFunction) {
+interface AuthPayload extends JwtPayload {
+  id: string;
+  email: string;
+}
+
+export default async function protectedRoute(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const token = req.cookies.token;
-    console.log("Token from cookies:", token);
+    console.log(token)
 
     if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized access. No token provided." });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET as string);
-    console.log(decoded);
+    const decoded = jwt.verify(token, JWT_SECRET as string) as unknown as AuthPayload;
 
-    if (!decoded) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized access. Invalid token." });
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "User no longer exists" });
     }
 
-    const user = decoded
-
-    req.user = user; 
+    req.user = user;
     next();
   } catch (error) {
-    if (error instanceof Error) {
-      console.error("Auth error:", error.message);
-    } else {
-      console.error("Auth error:", error);
-    }
-    return res.status(401).json({ message: "Unauthorized access." });
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 }

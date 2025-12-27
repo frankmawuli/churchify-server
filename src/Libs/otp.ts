@@ -1,5 +1,6 @@
 import sendEmail from "../config/resend.config";
 import prisma from "../Libs/prisma";
+import { otpEmail } from "./emails";
 
 interface OtpPayload {
   email: string;
@@ -19,7 +20,7 @@ export default async function sendOtp({ email ,subject }: OtpPayload) {
   await sendEmail({
     email: email,
     subject: subject,
-    html: `<h1>Your OTP code is ${otp}</h1><p>This code will expire in 10 minutes.</p>`,
+    html: otpEmail().replace("{{OTP_CODE}}", otp.toString()),
   });
 
   return otp;

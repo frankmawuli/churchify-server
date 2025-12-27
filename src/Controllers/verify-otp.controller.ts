@@ -1,3 +1,4 @@
+import { generateAccessToken } from "../Libs/jwt";
 import prisma from "../Libs/prisma";
 //verify otp
 import { Request, Response } from "express";
@@ -25,7 +26,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "OTP verified successfully" });
   } catch (error) {
     console.error("Error in verifyOtp:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };

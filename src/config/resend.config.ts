@@ -14,7 +14,7 @@ interface EmailParams {
 
 async function sendEmail({ email, subject, html }: EmailParams) {
   const { data, error } = await resend.emails.send({
-    from: "DAGH <support@frankmawuli.dev>",
+    from: "Churchify <support@frankmawuli.dev>",
     to: [email],
     subject: subject,
     html: html,

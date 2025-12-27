@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import prisma from "../Libs/prisma";
 import bcrypt from "bcryptjs";
-import { generateRefreshToken } from "../Libs/jwt";
+import { generateAccessToken, generateRefreshToken } from "../Libs/jwt";
+import sendOtp from "../Libs/otp";
 
 //create a new user
 export const createUser = async (req: Request, res: Response) => {
-  const { email, password, role, userType } = req.body;
-  if (!email || !password || !role || !userType) {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) {
     return res
       .status(400)
       .json({ message: "Email, password, role, and userType are required" });
@@ -19,13 +20,18 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = await prisma.user.create({
       data: {
+        name: name,
         email: email,
         password: hashedPassword,
-        role,
-        userType,
+        userType: "PASSWORD",
       },
+    });
+    await sendOtp({
+      email: newUser.email,
+      subject: "Verify your email for Churchify",
     });
     return res.status(201).json({
       message: "User created successfully",
@@ -64,10 +70,25 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    const token = await generateRefreshToken({
+    const accessToken = generateAccessToken(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.role || "",
+      },
+      res
+    );
+
+    const refreshToken = await generateRefreshToken({
       id: user.id,
       email: user.email,
       name: user.role || "",
+    });
+
+    //update number of logins
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { numberOfLogins: { increment: 1 } },
     });
 
     return res.status(200).json({
@@ -76,9 +97,11 @@ export const loginUser = async (req: Request, res: Response) => {
         userId: user.id,
         email: user.email,
         name: user.role,
+        numberOfLogins: user.numberOfLogins,
         // Add other non-sensitive fields as needed
       },
-      token: token,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     return res

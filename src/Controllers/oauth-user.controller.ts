@@ -38,6 +38,7 @@ passport.use(
         // 3. Create new OAuth user
         user = await prisma.user.create({
           data: {
+            name: profile.displayName || email.split("@")[0],
             email,
             password: "", // OAuth users don’t use passwords
             role: "CHURCH_ADMIN", // adjust based on your Role enum
