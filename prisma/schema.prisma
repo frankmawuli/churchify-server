@@ -70,6 +70,9 @@ model Churches {
   orders              orders[]
 
   transactions Transactions[]
+
+
+  reminders Reminders[]
 }
 
 model ChurchBranding {
@@ -193,6 +196,7 @@ model MembershipProfile {
   spouses  MembertoSpouse[]
 
   @@index([churchId])
+  reminders Reminders[]
 }
 
 model ChildtoMember {
@@ -348,6 +352,28 @@ model Transactions{
 
   church Churches @relation(fields: [churchId], references: [churchId])
   user   User     @relation(fields: [addedBy], references: [id])
+
+  @@index([churchId])
+
+}
+
+enum reminderType {
+  BIRTHDAY
+  ANNIVERSARY
+}
+model Reminders{
+  id          String   @id @default(uuid())
+  churchId    String
+  memberId    String
+  memberName  String
+  reminderType reminderType
+  age         Int
+  dateOfBirth DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  church Churches @relation(fields: [churchId], references: [churchId])
+  member MembershipProfile @relation(fields: [memberId], references: [id])
 
   @@index([churchId])
 

@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import prisma from "../Libs/prisma";
 import fs from "fs";
@@ -6,160 +5,231 @@ import csv from "csv-parser";
 import { memberCsvSchema } from "../Schemas/member-csv-schema";
 
 export const addMember = async (req: Request, res: Response) => {
-    const adminId = (req.user as any)?.id;
-    const { firstName, lastName, email, phoneNumber, address, relationshipStatus, spouseName, childrenNames, dateOfBirth } = req.body;
-    if (!firstName || !lastName || !email) {
-        return res.status(400).json({ message: "First name, last name, and email are required" });
+  const adminId = (req.user as any)?.id;
+  const { churchId } = req.params as { churchId: string };
+
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    address,
+    relationshipStatus,
+    spouseName,
+    childrenNames,
+    dateOfBirth,
+  } = req.body;
+  if (!firstName || !lastName || !email) {
+    return res
+      .status(400)
+      .json({ message: "First name, last name, and email are required" });
+  }
+  try {
+    //check if member already exists in the church
+    const existingMember = await prisma.membershipProfile.findFirst({
+      where: {
+        churchId: churchId,
+        email: email,
+      },
+    });
+    if (existingMember) {
+      return res
+        .status(409)
+        .json({ message: "Member with this email already exists" });
     }
-    try {
-        //check if member already exists in the church
-        const existingMember = await prisma.membershipProfile.findFirst({
-            where: {
-                churchId: adminId,
-                email: email
-            }
-        });
-        if (existingMember) {
-            return res.status(409).json({ message: "Member with this email already exists" });
-        }
-        const newMember = await prisma.membershipProfile.create({
-            data: {
-                churchId: adminId!,
-                addedBy: adminId!,
-                firstName,
-                lastName,
-                email,
-                phoneNumber,
-                address,
-                relationshipStatus,
-                spouseName,
-                childrenNames,
-                dateOfBirth,
-            }
-        });
-        return res.status(201).json({ message: "Member added successfully", member: newMember });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", details: error });
-    }
+    const newMember = await prisma.membershipProfile.create({
+      data: {
+        churchId: churchId,
+        addedBy: adminId,
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        address,
+        relationshipStatus,
+        spouseName,
+        childrenNames,
+        dateOfBirth,
+      },
+    });
+    return res
+      .status(201)
+      .json({ message: "Member added successfully", member: newMember });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", details: error });
+  }
 };
 
 export const getMemberDetails = async (req: Request, res: Response) => {
-    const adminId = (req.user as any)?.id;
-    const memberId = req.params.memberId;
-    try {
-        if (!memberId) {
-            return res.status(400).json({ message: "Member ID is required" });
-        }
-        if (!adminId) {
-            return res.status(401).json({ message: "Unauthorized to access this resource" });
-   
-        }
-        const member = await prisma.membershipProfile.findFirst({
-            where: {
-                id: memberId,
-                addedBy: adminId
-            }
-        });
-        if (!member) {
-            return res.status(404).json({ message: "Member not found" });
-        }
-        return res.status(200).json({ member });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", details: error });
+  const adminId = (req.user as any)?.id;
+  const { churchId, memberId } = req.params as {
+    churchId: string;
+    memberId: string;
+  };
+
+  try {
+    if (!memberId) {
+      return res.status(400).json({ message: "Member ID is required" });
     }
+    if (!adminId) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized to access this resource" });
+    }
+
+    const member = await prisma.membershipProfile.findFirst({
+      where: {
+        id: memberId,
+        churchId: churchId,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+    return res.status(200).json({ member });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", details: error });
+  }
 };
 
 export const updateMemberDetails = async (req: Request, res: Response) => {
-    const adminId = (req.user as any)?.id;
-    const memberId = req.params.memberId;
-    const { firstName, lastName, email, phoneNumber, address, relationshipStatus, spouseName, childrenNames, dateOfBirth } = req.body;
-    try {
-        if (!memberId) {
-            return res.status(400).json({ message: "Member ID is required" });
-         }
-        if (!adminId) {
-            return res.status(401).json({ message: "Unauthorized to access this resource" });
-        }
-        const member = await prisma.membershipProfile.findFirst({
-            where: {
-                id: memberId,
-                addedBy: adminId
-            }
-        });
-        if (!member) {
-            return res.status(404).json({ message: "Member not found" });
-        }
-        const updatedMember = await prisma.membershipProfile.update({
-            where: {
-                id: memberId
-            },
-            data: {
-                firstName,
-                lastName,
-                email,
-                phoneNumber,
-                address,
-                relationshipStatus,
-                spouseName,
-                childrenNames,
-                dateOfBirth
-            }
-        });
-        return res.status(200).json({ message: "Member updated successfully", member: updatedMember });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", details: error });
+  const adminId = (req.user as any)?.id;
+  const { churchId, memberId } = req.params as {
+    churchId: string;
+    memberId: string;
+  };
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    address,
+    relationshipStatus,
+    spouseName,
+    childrenNames,
+    dateOfBirth,
+  } = req.body;
+
+  try {
+    if (!memberId) {
+      return res.status(400).json({ message: "Member ID is required" });
     }
+    if (!adminId) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized to access this resource" });
+    }
+
+    const member = await prisma.membershipProfile.findFirst({
+      where: {
+        id: memberId,
+        churchId: churchId,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    const updatedMember = await prisma.membershipProfile.update({
+      where: {
+        id: memberId,
+      },
+      data: {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        address,
+        relationshipStatus,
+        spouseName,
+        childrenNames,
+        dateOfBirth,
+      },
+    });
+    return res
+      .status(200)
+      .json({ message: "Member updated successfully", member: updatedMember });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", details: error });
+  }
 };
 
 export const deleteMember = async (req: Request, res: Response) => {
-    const adminId = (req.user as any)?.id;
-    const memberId = req.params.memberId;
-    try{
-        if (!memberId) {
-            return res.status(400).json({ message: "Member ID is required" });
-        }
-        if (!adminId) {
-            return res.status(401).json({ message: "Unauthorized to access this resource" });
-        }
-        const member = await prisma.membershipProfile.findFirst({
-            where: {
-                id: memberId,
-                addedBy: adminId
-            }
-        });
-        if (!member) {
-            return res.status(404).json({ message: "Member not found" });
-        }
-        await prisma.membershipProfile.delete({
-            where: {
-                id: memberId
-            }
-        });
-        return res.status(200).json({ message: "Member deleted successfully" });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", details: error });
+  const adminId = (req.user as any)?.id;
+  const { churchId, memberId } = req.params as {
+    churchId: string;
+    memberId: string;
+  };
+
+  try {
+    if (!memberId) {
+      return res.status(400).json({ message: "Member ID is required" });
     }
+    if (!adminId) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized to access this resource" });
+    }
+
+    const member = await prisma.membershipProfile.findFirst({
+      where: {
+        id: memberId,
+        churchId: churchId,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    await prisma.membershipProfile.delete({
+      where: {
+        id: memberId,
+      },
+    });
+    return res.status(200).json({ message: "Member deleted successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", details: error });
+  }
 };
 
 export const getAllMembers = async (req: Request, res: Response) => {
-    const adminId = (req.user as any)?.id;
-    try {
-        if (!adminId) {
-            return res.status(401).json({ message: "Unauthorized to access this resource" });
-        }
-        const members = await prisma.membershipProfile.findMany({
-            where: {
-                churchId: adminId
-            }
-        });
-        return res.status(200).json({ members });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", details: error });
+  const adminId = (req.user as any)?.id;
+  const { churchId } = req.params as { churchId: string };
+
+  try {
+    if (!adminId) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized to access this resource" });
     }
+
+    const members = await prisma.membershipProfile.findMany({
+      where: {
+        churchId: churchId,
+      },
+    });
+    return res.status(200).json({ members });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", details: error });
+  }
 };
 
 export const addMembersByCSV = async (req: Request, res: Response) => {
   const adminId = (req.user as any)?.id;
+  const { churchId } = req.params as { churchId: string };
 
   if (!adminId) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -183,7 +253,7 @@ export const addMembersByCSV = async (req: Request, res: Response) => {
           // Check duplicate email in same church
           const exists = await prisma.membershipProfile.findFirst({
             where: {
-              churchId: adminId,
+              churchId: churchId,
               email: data.email,
             },
           });
@@ -194,7 +264,7 @@ export const addMembersByCSV = async (req: Request, res: Response) => {
 
           await prisma.membershipProfile.create({
             data: {
-              churchId: adminId,
+              churchId: churchId,
               addedBy: adminId,
               firstName: data.firstName,
               lastName: data.lastName,

@@ -13,15 +13,15 @@ import {
 const router = express.Router();
 
 // Member management routes
-router.post("/", protectedRoute, addMember);
-router.get("/", protectedRoute, getAllMembers);
-router.get("/:memberId", protectedRoute, getMemberDetails);
-router.put("/:memberId", protectedRoute, updateMemberDetails);
-router.delete("/:memberId", protectedRoute, deleteMember);
+router.post("/:churchId", protectedRoute, addMember);
+router.get("/:churchId", protectedRoute, getAllMembers);
+router.get("/:churchId/:memberId", protectedRoute, getMemberDetails);
+router.put("/:churchId/:memberId", protectedRoute, updateMemberDetails);
+router.delete("/:churchId/:memberId", protectedRoute, deleteMember);
 
 // CSV bulk upload route
 router.post(
-  "/upload/csv",
+  "/:churchId/upload/csv",
   protectedRoute,
   csvUpload.single("file"),
   addMembersByCSV

@@ -15,25 +15,25 @@ if (!process.env.JWT_REFRESH_SECRET) {
 interface JwtPayload {
   id: string;
   email: string;
-  name: string;
+  role: string;
 }
 
-const AccessTokenSecret = process.env.JWT_ACCESS_SECRET;
-const RefreshTokenSecret = process.env.JWT_REFRESH_SECRET;
+const AccessTokenSecret = process.env.JWT_ACCESS_SECRET as string;
+const RefreshTokenSecret = process.env.JWT_REFRESH_SECRET as string;
 import prisma from "./prisma";
 
 // Generate Access Token (shorter life)
 export function generateAccessToken(user: JwtPayload, res: Response) {
   const token = jwt.sign(
-    { id: user.id, email: user.email, name: user.name },
+    { id: user.id, email: user.email, role: user.role },
     AccessTokenSecret,
-    { expiresIn: "15m" }
+    { expiresIn: "1d" }
   );
   res.cookie("token", token, {
     httpOnly: true,
     secure: true,
-    sameSite: 'none',
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
   });
   return token;
 }
@@ -41,7 +41,7 @@ export function generateAccessToken(user: JwtPayload, res: Response) {
 // Generate Refresh Token (stored in DB)
 export async function generateRefreshToken(user: JwtPayload) {
   const refreshToken = jwt.sign(
-    { id: user.id, email: user.email, name: user.name },
+    { id: user.id, email: user.email, role: user.role },
     RefreshTokenSecret,
     { expiresIn: "7d" }
   );

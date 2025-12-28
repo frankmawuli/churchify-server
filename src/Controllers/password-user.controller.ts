@@ -6,7 +6,7 @@ import sendOtp from "../Libs/otp";
 
 //create a new user
 export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
+  const { name, email, password} = req.body;
   if (!name || !email || !password) {
     return res
       .status(400)
@@ -20,7 +20,7 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     const newUser = await prisma.user.create({
       data: {
         name: name,
@@ -74,7 +74,7 @@ export const loginUser = async (req: Request, res: Response) => {
       {
         id: user.id,
         email: user.email,
-        name: user.role || "",
+        role: user.role || "",
       },
       res
     );
@@ -82,7 +82,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const refreshToken = await generateRefreshToken({
       id: user.id,
       email: user.email,
-      name: user.role || "",
+      role: user.role || "",
     });
 
     //update number of logins
@@ -102,7 +102,7 @@ export const loginUser = async (req: Request, res: Response) => {
       user: {
         userId: user.id,
         email: user.email,
-        name: user.role,
+        role: user.role,
         numberOfLogins: user.numberOfLogins,
         churchId: churchId?.churchId,
         // Add other non-sensitive fields as needed
