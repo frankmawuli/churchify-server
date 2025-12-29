@@ -85,6 +85,9 @@ app.use("/events",eventRoutes);
 
 //member routes
 app.use("/members", memberRoutes)
+
+//celebrations routes
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

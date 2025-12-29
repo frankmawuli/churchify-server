@@ -1,170 +1,66 @@
 import { Request, Response } from "express";
 import prisma from "../Libs/prisma";
+import sendEmail from "../config/resend.config";
+import { sendAniversaryEmail, birthdayEmail } from "../Libs/emails";
 
-// Get upcoming birthdays for a church
-export const getUpcomingBirthdays = async (req: Request, res: Response) => {
-  const { churchId } = req.params;
-  const { days = 30 } = req.query; // Default to 30 days
+export const getMonthlyCelebrations = async (req: Request, res: Response) => {
+  const { churchId, month } = req.params;
+  const adminId = (req.user as any)?.id;
+
+  if (!churchId) {
+    return res.status(400).json({ message: "Church ID is required" });
+  }
+
+  if (!adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const monthNumber = Number(month);
+
+  if (isNaN(monthNumber) || monthNumber < 1 || monthNumber > 12) {
+    return res.status(400).json({ message: "Invalid month parameter" });
+  }
 
   try {
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + Number(days));
+    const year = new Date().getFullYear();
 
-    const members = await prisma.membershipProfile.findMany({
+    const startDate = new Date(year, monthNumber - 1, 1);
+    const endDate = new Date(year, monthNumber, 0, 23, 59, 59);
+
+    // 🎂 Birthdays
+    const birthdayCelebrants = await prisma.membershipProfile.findMany({
       where: {
         churchId,
-        dateOfBirth: { not: null },
-        status: "ACTIVE",
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        dateOfBirth: true,
-      },
-    });
-
-    // Filter members with upcoming birthdays
-    const upcomingBirthdays = members
-      .filter((member) => {
-        if (!member.dateOfBirth) return false;
-
-        const birthDate = new Date(member.dateOfBirth);
-        const thisYearBirthday = new Date(
-          today.getFullYear(),
-          birthDate.getMonth(),
-          birthDate.getDate()
-        );
-
-        // If birthday already passed this year, check next year
-        if (thisYearBirthday < today) {
-          thisYearBirthday.setFullYear(today.getFullYear() + 1);
-        }
-
-        return thisYearBirthday >= today && thisYearBirthday <= futureDate;
-      })
-      .map((member) => {
-        const birthDate = new Date(member.dateOfBirth!);
-        const age = today.getFullYear() - birthDate.getFullYear();
-        const thisYearBirthday = new Date(
-          today.getFullYear(),
-          birthDate.getMonth(),
-          birthDate.getDate()
-        );
-
-        if (thisYearBirthday < today) {
-          thisYearBirthday.setFullYear(today.getFullYear() + 1);
-        }
-
-        return {
-          ...member,
-          upcomingBirthday: thisYearBirthday,
-          age: age,
-        };
-      })
-      .sort(
-        (a, b) => a.upcomingBirthday.getTime() - b.upcomingBirthday.getTime()
-      );
-
-    return res.status(200).json({
-      count: upcomingBirthdays.length,
-      birthdays: upcomingBirthdays,
-    });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch upcoming birthdays" });
-  }
-};
-
-// Get birthdays for a specific month
-export const getBirthdaysByMonth = async (req: Request, res: Response) => {
-  const { churchId } = req.params;
-  const { month, year } = req.query;
-
-  try {
-    if (!month) {
-      return res.status(400).json({ message: "Month is required" });
-    }
-
-    const targetMonth = Number(month) - 1; // JavaScript months are 0-indexed
-    const targetYear = year ? Number(year) : new Date().getFullYear();
-
-    const members = await prisma.membershipProfile.findMany({
-      where: {
-        churchId,
-        dateOfBirth: { not: null },
-        status: "ACTIVE",
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phoneNumber: true,
-        dateOfBirth: true,
-      },
-    });
-
-    const birthdaysInMonth = members
-      .filter((member) => {
-        if (!member.dateOfBirth) return false;
-        const birthDate = new Date(member.dateOfBirth);
-        return birthDate.getMonth() === targetMonth;
-      })
-      .map((member) => {
-        const birthDate = new Date(member.dateOfBirth!);
-        const age = targetYear - birthDate.getFullYear();
-        const birthdayThisYear = new Date(
-          targetYear,
-          birthDate.getMonth(),
-          birthDate.getDate()
-        );
-
-        return {
-          ...member,
-          birthdayDate: birthdayThisYear,
-          age: age,
-          day: birthDate.getDate(),
-        };
-      })
-      .sort((a, b) => a.day - b.day);
-
-    return res.status(200).json({
-      month: Number(month),
-      year: targetYear,
-      count: birthdaysInMonth.length,
-      birthdays: birthdaysInMonth,
-    });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch birthdays by month" });
-  }
-};
-
-// Get upcoming anniversaries for a church
-export const getUpcomingAnniversaries = async (req: Request, res: Response) => {
-  const { churchId } = req.params;
-  const { days = 30 } = req.query;
-
-  try {
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + Number(days));
-
-    const spouseRecords = await prisma.membertoSpouse.findMany({
-      where: {
-        member: {
-          churchId,
-          status: "ACTIVE",
+        addedBy: adminId,
+        dateOfBirth: {
+          gte: startDate,
+          lte: endDate,
         },
       },
-      include: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        dateOfBirth: true,
+      },
+    });
+
+    // 💍 Anniversaries
+    const anniversaryCelebrants = await prisma.membertoSpouse.findMany({
+      where: {
+        marriedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        member: {
+          churchId,
+          addedBy: adminId,
+        },
+      },
+      select: {
+        marriedAt: true,
+        spouseName: true,
         member: {
           select: {
             id: true,
@@ -176,135 +72,148 @@ export const getUpcomingAnniversaries = async (req: Request, res: Response) => {
       },
     });
 
-    const upcomingAnniversaries = spouseRecords
-      .filter((record) => {
-        const marriageDate = new Date(record.marriedAt);
-        const thisYearAnniversary = new Date(
-          today.getFullYear(),
-          marriageDate.getMonth(),
-          marriageDate.getDate()
-        );
-
-        if (thisYearAnniversary < today) {
-          thisYearAnniversary.setFullYear(today.getFullYear() + 1);
-        }
-
-        return (
-          thisYearAnniversary >= today && thisYearAnniversary <= futureDate
-        );
-      })
-      .map((record) => {
-        const marriageDate = new Date(record.marriedAt);
-        const yearsMarried = today.getFullYear() - marriageDate.getFullYear();
-        const thisYearAnniversary = new Date(
-          today.getFullYear(),
-          marriageDate.getMonth(),
-          marriageDate.getDate()
-        );
-
-        if (thisYearAnniversary < today) {
-          thisYearAnniversary.setFullYear(today.getFullYear() + 1);
-        }
-
-        return {
-          memberId: record.member.id,
-          memberName: `${record.member.firstName} ${record.member.lastName}`,
-          spouseName: record.spouseName,
-          email: record.member.email,
-          upcomingAnniversary: thisYearAnniversary,
-          yearsMarried: yearsMarried,
-          originalDate: marriageDate,
-        };
-      })
-      .sort(
-        (a, b) =>
-          a.upcomingAnniversary.getTime() - b.upcomingAnniversary.getTime()
-      );
-
     return res.status(200).json({
-      count: upcomingAnniversaries.length,
-      anniversaries: upcomingAnniversaries,
+      month: monthNumber,
+      birthdays: birthdayCelebrants,
+      anniversaries: anniversaryCelebrants,
     });
   } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch upcoming anniversaries" });
+    console.error("Monthly celebrations error:", error);
+    return res.status(500).json({
+      message: "Failed to fetch monthly celebrations",
+    });
   }
 };
 
-// Get all reminders (birthdays and anniversaries) for a church
-export const getAllReminders = async (req: Request, res: Response) => {
+export const getWeeklyCelebrations = async (req: Request, res: Response) => {
   const { churchId } = req.params;
+  const adminId = (req.user as any)?.id;
+
+  if (!churchId) {
+    return res.status(400).json({ message: "Church ID is required" });
+  }
+
+  if (!adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
   try {
-    const reminders = await prisma.reminders.findMany({
-      where: { churchId },
-      include: {
+    const today = new Date();
+
+    // 📅 Start of week (Monday)
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // 📅 End of week (Sunday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // 🎂 Birthdays this week
+    const birthdayCelebrants = await prisma.membershipProfile.findMany({
+      where: {
+        churchId,
+        addedBy: adminId,
+        dateOfBirth: {
+          gte: startOfWeek,
+          lte: endOfWeek,
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        dateOfBirth: true,
+      },
+    });
+
+    // 💍 Anniversaries this week
+    const anniversaryCelebrants = await prisma.membertoSpouse.findMany({
+      where: {
+        marriedAt: {
+          gte: startOfWeek,
+          lte: endOfWeek,
+        },
+        member: {
+          churchId,
+          addedBy: adminId,
+        },
+      },
+      select: {
+        marriedAt: true,
+        spouseName: true,
         member: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
             email: true,
           },
         },
       },
-      orderBy: { dateOfBirth: "asc" },
     });
 
     return res.status(200).json({
-      count: reminders.length,
-      reminders,
+      week: {
+        start: startOfWeek,
+        end: endOfWeek,
+      },
+      birthdays: birthdayCelebrants,
+      anniversaries: anniversaryCelebrants,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Failed to fetch reminders" });
+    console.error("Weekly celebrations error:", error);
+    return res.status(500).json({
+      message: "Failed to fetch weekly celebrations",
+    });
   }
 };
 
-// Create a reminder
-export const createReminder = async (req: Request, res: Response) => {
-  const { churchId } = req.params;
-  const { memberId, memberName, reminderType, age, dateOfBirth } = req.body;
+export const sendCelebrationEmail = async (req: Request, res: Response) => {
+  const churchId = req.params.churchId;
+  const adminId = (req.user as any)?.id;
+  const { type, email } = req.body;
+  if (!churchId) {
+    return res.status(400).json({ message: "Church ID is required" });
+  }
+
+  if (!adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  if (!type || !["birthday", "anniversary"].includes(type)) {
+    return res
+      .status(400)
+      .json({ message: "Valid celebration type is required" });
+  }
+
+  if (!email) {
+    return res.status(400).json({ message: "Recipient email is required" });
+  }
 
   try {
-    if (!memberId || !memberName || !reminderType || !dateOfBirth) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (type === "birthday") {
+      await sendEmail({
+        email,
+        subject: "Happy Birthday!",
+        html: birthdayEmail(),
+      });
+    } else if (type === "anniversary") {
+      await sendEmail({
+        email,
+        subject: "Happy Anniversary!",
+        html: sendAniversaryEmail(),
+      });
     }
 
-    const reminder = await prisma.reminders.create({
-      data: {
-        churchId,
-        memberId,
-        memberName,
-        reminderType,
-        age: age || 0,
-        dateOfBirth: new Date(dateOfBirth),
-      },
-    });
-
-    return res.status(201).json({
-      message: "Reminder created successfully",
-      reminder,
-    });
+    return res
+      .status(200)
+      .json({ message: "Celebration email sent successfully" });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Failed to create reminder" });
-  }
-};
-
-// Delete a reminder
-export const deleteReminder = async (req: Request, res: Response) => {
-  const { reminderId } = req.params;
-
-  try {
-    await prisma.reminders.delete({
-      where: { id: reminderId },
-    });
-
-    return res.status(200).json({ message: "Reminder deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Failed to delete reminder" });
+    console.error("Send celebration email error:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to send celebration email" });
   }
 };
