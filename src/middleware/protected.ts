@@ -33,6 +33,7 @@ export default async function protectedRoute(
         id: true,
         email: true,
         role: true,
+        numberOfLogins: true,
       },
     });
 

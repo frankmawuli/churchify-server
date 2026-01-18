@@ -233,7 +233,7 @@ export function otpEmail (){
 }
 
 
-export function birthdayEmail(){
+export function  birthdayEmail(){
   return `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -376,52 +376,8 @@ export function birthdayEmail(){
                       As you celebrate another year of life, we pray that God's grace continues to guide you, His love surrounds you, and His peace fills your heart. May this new year of your life bring you closer to His purpose for you and overflow with His blessings.
                     </p>
                     
-                    <!-- Birthday Wishes -->
-                    <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: 16px; padding: 32px 28px; margin: 0 0 32px 0;">
-                      <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #1a1a1a; text-align: center;">🎁 Our Birthday Wishes for You</h3>
-                      
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">✨</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Health and Vitality</strong> — May you enjoy good health and strength in the coming year</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">💖</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Joy and Happiness</strong> — May your heart be filled with laughter and precious moments</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">🙏</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Spiritual Growth</strong> — May your faith continue to deepen and flourish</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">🌟</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Dreams Fulfilled</strong> — May God grant you the desires of your heart</p>
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
-                    
-                    <!-- Personal Message Section -->
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 28px; margin: 0 0 32px 0; text-align: center;">
-                      <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.7;">
-                        <strong style="color: #0369a1;">{{PASTOR_NAME}}</strong> and the entire church family at <strong style="color: #0369a1;">{{CHURCH_NAME}}</strong> wish you a magnificent birthday celebration! We're blessed to have you in our fellowship.
-                      </p>
-                    </div>
+
+
                     
                     <!-- Call to Action -->
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 24px 0;">
@@ -438,14 +394,7 @@ export function birthdayEmail(){
                     </table>
                     
                     <!-- Closing Message -->
-                    <div style="text-align: center; padding: 24px 0 0 0; border-top: 1px solid #e5e7eb;">
-                      <p style="margin: 0 0 8px 0; font-size: 16px; color: #1a1a1a; line-height: 1.6; font-weight: 500;">
-                        With love and blessings,
-                      </p>
-                      <p style="margin: 0; font-size: 18px; color: #f59e0b; font-weight: 700;">
-                        Your {{CHURCH_NAME}} Family ❤️
-                      </p>
-                    </div>
+                   
                     
                   </td>
                 </tr>
@@ -539,6 +488,7 @@ export function birthdayEmail(){
 </body>
 </html>
 `;
+
 }
 
 export function sendAniversaryEmail(){
@@ -684,60 +634,8 @@ export function sendAniversaryEmail(){
                       </div>
                     </div>
                     
-                    <!-- Anniversary Blessings -->
-                    <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: 16px; padding: 32px 28px; margin: 0 0 32px 0;">
-                      <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #1a1a1a; text-align: center;">💝 Our Prayers for Your Marriage</h3>
-                      
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">💑</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Continued Love</strong> — May your love for each other grow deeper with each passing year</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">🤝</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Unity and Partnership</strong> — May you continue to walk hand in hand through life's journey</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">✝️</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Faith Foundation</strong> — May Christ remain at the center of your marriage</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">😊</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Joy and Laughter</strong> — May your days be filled with happiness and precious memories</p>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0;">
-                            <div style="display: flex; align-items: start; gap: 12px;">
-                              <span style="font-size: 24px; line-height: 1;">🌟</span>
-                              <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.6;"><strong>Many More Years</strong> — May God bless you with countless more anniversaries to celebrate</p>
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                    </div>
                     
-                    <!-- Personal Message Section -->
-                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; padding: 28px; margin: 0 0 32px 0; text-align: center;">
-                      <p style="margin: 0; font-size: 15px; color: #4a5568; line-height: 1.7;">
-                        <strong style="color: #15803d;">{{PASTOR_NAME}}</strong> and everyone at <strong style="color: #15803d;">{{CHURCH_NAME}}</strong> celebrate this special day with you! Your marriage is a beautiful example of God's love in action.
-                      </p>
-                    </div>
+                   
                     
                     <!-- Call to Action -->
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 24px 0;">
@@ -754,22 +652,10 @@ export function sendAniversaryEmail(){
                     </table>
                     
                     <!-- Fun Anniversary Facts -->
-                    <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-radius: 12px; padding: 24px 28px; margin: 0 0 32px 0;">
-                      <h4 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #78350f; text-align: center;">🎊 Anniversary Milestone</h4>
-                      <p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.7; text-align: center;">
-                        <strong>{{YEARS_MARRIED}} years</strong> together means you've shared approximately <strong>{{TOTAL_DAYS}}</strong> days, created countless memories, and built a lifetime of love and laughter!
-                      </p>
-                    </div>
+                    
                     
                     <!-- Closing Message -->
-                    <div style="text-align: center; padding: 24px 0 0 0; border-top: 1px solid #e5e7eb;">
-                      <p style="margin: 0 0 8px 0; font-size: 16px; color: #1a1a1a; line-height: 1.6; font-weight: 500;">
-                        With love and admiration,
-                      </p>
-                      <p style="margin: 0; font-size: 18px; color: #db2777; font-weight: 700;">
-                        Your {{CHURCH_NAME}} Family ❤️
-                      </p>
-                    </div>
+                    
                     
                   </td>
                 </tr>

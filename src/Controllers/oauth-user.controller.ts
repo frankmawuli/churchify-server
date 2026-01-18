@@ -32,6 +32,13 @@ passport.use(
 
         // 2. If user exists, return user
         if (user) {
+          // Update user if they signed up with password but now using OAuth
+          if (user.userType === "PASSWORD") {
+            user = await prisma.user.update({
+              where: { id: user.id },
+              data: { userType: "OAUTH" },
+            });
+          }
           return done(null, user);
         }
 
@@ -48,6 +55,7 @@ passport.use(
 
         return done(null, user);
       } catch (error) {
+        console.error("Google OAuth error:", error);
         return done(error as Error, false);
       }
     }

@@ -11,13 +11,18 @@ import storeRoutes from "./Routes/store.route";
 import financeRoutes from "./Routes/finance.routes";
 import eventRoutes from "./Routes/events.routes";
 import memberRoutes from "./Routes/member.routes";
+import imageRoutes from "./Routes/image-upload.route";
 import morgan from "morgan";
+import { generateAccessToken, generateRefreshToken } from "./Libs/jwt";
+import protectedRoute from "./middleware/protected";
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(morgan('dev'))
+app.use(morgan("dev"));
 app.use(
   cors({
     origin: ["http://localhost:5173"],
@@ -51,42 +56,70 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/",
-    successRedirect: "/profile",
-  })
-);
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed`,
+    session: false,
+  }),
+  async (req, res) => {
+    try {
+      const user = req.user as any;
 
-app.get("/profile", (req, res) => {
-  if (!req.user) {
-    return res.redirect("/");
+      if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_user`);
+      }
+
+      // Generate tokens
+      generateAccessToken(
+        { id: user.id, email: user.email, role: user.role },
+        res
+      );
+
+      await generateRefreshToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      // Redirect user (cookies already set)
+      res.redirect(`${process.env.FRONTEND_URL}/church-admin?auth=success`);
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+    }
   }
-  res.send(`<h1>Profile Page</h1><p>Welcome ${req.user}</p>`);
+);
+app.get("/auth/me", protectedRoute, (req, res) => {
+  res.json({ user: req.user }); // Wrap in object with 'user' key
 });
+
+// app.get("/profile", (req, res) => {
+//   if (!req.user) {
+//     return res.redirect("/");
+//
+//   res.send(`<h1>Profile Page</h1><p>Welcome ${req.user}</p>`);
+// });
 
 //auth routes
 app.use("/auth", authRoutes);
 
-
-
 //church routes
 app.use("/church", churchRoutes);
-
 
 //store routes
 app.use("/store", storeRoutes);
 
-
 //finance routes
 app.use("/finance", financeRoutes);
 
-
 //event routes
-app.use("/events",eventRoutes);
+app.use("/events", eventRoutes);
 
 //member routes
-app.use("/members", memberRoutes)
+app.use("/members", memberRoutes);
 
 //celebrations routes
+
+//image upload routes
+app.use("/images", imageRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

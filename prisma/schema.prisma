@@ -189,7 +189,7 @@ model MembershipProfile {
   joinedAt           DateTime           @default(now())
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
-
+  marriedAt          DateTime?
   church   Churches         @relation(fields: [churchId], references: [churchId])
   user     User             @relation(fields: [addedBy], references: [id])
   children ChildtoMember[]
@@ -214,9 +214,12 @@ model MembertoSpouse {
   id         String            @id @default(uuid())
   memberId   String
   spouseName String
-  marriedAt  DateTime
+  marriedAt  DateTime?
   createdAt  DateTime          @default(now())
   member     MembershipProfile @relation(fields: [memberId], references: [id])
+
+  
+
 
   @@index([memberId])
 }

@@ -47,28 +47,22 @@ export const getMonthlyCelebrations = async (req: Request, res: Response) => {
     });
 
     // 💍 Anniversaries
-    const anniversaryCelebrants = await prisma.membertoSpouse.findMany({
+    const anniversaryCelebrants = await prisma.membershipProfile.findMany({
       where: {
+        churchId,
+        addedBy: adminId,
         marriedAt: {
           gte: startDate,
           lte: endDate,
         },
-        member: {
-          churchId,
-          addedBy: adminId,
-        },
       },
       select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
         marriedAt: true,
         spouseName: true,
-        member: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -130,28 +124,22 @@ export const getWeeklyCelebrations = async (req: Request, res: Response) => {
     });
 
     // 💍 Anniversaries this week
-    const anniversaryCelebrants = await prisma.membertoSpouse.findMany({
+    const anniversaryCelebrants = await prisma.membershipProfile.findMany({
       where: {
+        churchId,
+        addedBy: adminId,
         marriedAt: {
           gte: startOfWeek,
           lte: endOfWeek,
         },
-        member: {
-          churchId,
-          addedBy: adminId,
-        },
       },
       select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
         marriedAt: true,
         spouseName: true,
-        member: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -174,7 +162,7 @@ export const getWeeklyCelebrations = async (req: Request, res: Response) => {
 export const sendCelebrationEmail = async (req: Request, res: Response) => {
   const churchId = req.params.churchId;
   const adminId = (req.user as any)?.id;
-  const { type, email } = req.body;
+  const { name, type, email, date } = req.body;
   if (!churchId) {
     return res.status(400).json({ message: "Church ID is required" });
   }
@@ -191,19 +179,22 @@ export const sendCelebrationEmail = async (req: Request, res: Response) => {
   if (!email) {
     return res.status(400).json({ message: "Recipient email is required" });
   }
+const yearsMarried = type === "ANNIVERSARY" && date ? new Date().getFullYear() - new Date(date).getFullYear() : null;
 
   try {
-    if (type === "birthday") {
+    if (type === "BIRTHDAY") {
       await sendEmail({
         email,
         subject: "Happy Birthday!",
-        html: birthdayEmail(),
+        html: birthdayEmail().replace("{{MEMBER_NAME}}", name),
       });
-    } else if (type === "anniversary") {
+    } else if (type === "ANNIVERSARY") {
       await sendEmail({
         email,
         subject: "Happy Anniversary!",
-        html: sendAniversaryEmail(),
+        html: sendAniversaryEmail()
+          .replace("{{COUPLE_NAMES}}", name)
+          .replace("{{YEARS_MARRIED}}", yearsMarried?.toString() || "0"),
       });
     }
 
